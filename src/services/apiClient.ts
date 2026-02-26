@@ -99,8 +99,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-
-// ─── Mock Delay Helper ────────────────────────────────────────────────────────
-
-export const mockDelay = (ms = API_CONFIG.MOCK_DELAY): Promise<void> =>
-  new Promise(resolve => setTimeout(resolve, ms));

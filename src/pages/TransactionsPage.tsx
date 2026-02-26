@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Download, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/layout';
 import { TransactionRowSkeleton } from '@/components/common';
 import {
@@ -7,6 +8,8 @@ import {
   BulkBanner,
   TransactionRow,
   RulePromptModal,
+  ExportPanel,
+  AddTransactionModal,
 } from '@/components/transactions';
 import { useTransactions, useRules } from '@/hooks';
 import { useAppStore } from '@/store';
@@ -14,10 +17,23 @@ import { formatAbsAmount } from '@/utils';
 
 export function TransactionsPage() {
   const navigate = useNavigate();
-  const { transactions, filteredTransactions, summary, isLoading, filters, load, bulkCategorize, setFilters } =
-    useTransactions();
+  const {
+    transactions,
+    filteredTransactions,
+    summary,
+    isLoading,
+    filters,
+    categories,
+    load,
+    bulkCategorize,
+    createManual,
+    setFilters,
+  } = useTransactions();
   const { createRule, rulePrompt, setRulePrompt } = useRules();
   const { setSelectedTransactionId } = useAppStore();
+
+  const [showExport, setShowExport] = useState(false);
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
 
   useEffect(() => {
     if (transactions.length === 0) {
@@ -38,6 +54,7 @@ export function TransactionsPage() {
         mono="Transaction Review"
         actions={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Debit / Credit summary */}
             <div
               style={{
                 display: 'flex',
@@ -59,6 +76,60 @@ export function TransactionsPage() {
                 <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>KWD</span>
               </span>
             </div>
+
+            {/* Export button */}
+            <button
+              onClick={() => setShowExport(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 14px',
+                borderRadius: 8,
+                background: 'white',
+                border: '1.5px solid var(--border)',
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--text-mid)',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--text-mid)';
+                e.currentTarget.style.color = 'var(--text)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.color = 'var(--text-mid)';
+              }}
+            >
+              <Download size={13} />
+              Export
+            </button>
+
+            {/* Add Transaction button */}
+            <button
+              onClick={() => setShowAddTransaction(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 14px',
+                borderRadius: 8,
+                background: 'var(--bg-dark)',
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            >
+              <Plus size={13} />
+              Add Transaction
+            </button>
           </div>
         }
       />
@@ -165,6 +236,18 @@ export function TransactionsPage() {
             });
           }}
           onDismiss={() => setRulePrompt(null)}
+        />
+      )}
+
+      {/* Export Panel */}
+      {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
+
+      {/* Add Transaction Modal */}
+      {showAddTransaction && (
+        <AddTransactionModal
+          categories={categories}
+          onSubmit={createManual}
+          onClose={() => setShowAddTransaction(false)}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store';
 import { transactionService } from '@/services';
 import type { TransactionFilters } from '@/types';
+import type { CreateManualPayload } from '@/services/transactionService';
 import { RULE_SUGGESTION_THRESHOLD } from '@/constants';
 
 // ─── useTransactions ──────────────────────────────────────────────────────────
@@ -58,6 +59,8 @@ export function useTransactions() {
       try {
         const updated = await transactionService.categorize(txId, { categoryId, source });
         updateTransaction(updated);
+        // Refresh the full list so summary counts and filters are up to date
+        void load();
         addToast(`Categorized as ${categoryLabel}`, 'success', true, {
           txId,
           oldCat,
@@ -76,7 +79,7 @@ export function useTransactions() {
         addToast(err instanceof Error ? err.message : 'Failed to categorize', 'error');
       }
     },
-    [transactions, rules, categories, updateTransaction, addToast, setRulePrompt],
+    [transactions, rules, categories, load, updateTransaction, addToast, setRulePrompt],
   );
 
   const bulkCategorize = useCallback(
@@ -85,12 +88,14 @@ export function useTransactions() {
       try {
         const updated = await transactionService.bulkCategorize({ txIds, categoryId });
         updated.forEach(updateTransaction);
+        // Refresh the full list so summary counts and filters are up to date
+        void load();
         addToast(`${txIds.length} transactions categorized as ${categoryLabel}`, 'success');
       } catch (err) {
         addToast(err instanceof Error ? err.message : 'Bulk categorize failed', 'error');
       }
     },
-    [categories, updateTransaction, addToast],
+    [categories, load, updateTransaction, addToast],
   );
 
   const revert = useCallback(
@@ -98,12 +103,14 @@ export function useTransactions() {
       try {
         const updated = await transactionService.revertTransaction(txId);
         updateTransaction(updated);
+        // Refresh the full list so summary counts and filters are up to date
+        void load();
         addToast('Reverted to previous state', 'info');
       } catch (err) {
         addToast(err instanceof Error ? err.message : 'Revert failed', 'error');
       }
     },
-    [updateTransaction, addToast],
+    [load, updateTransaction, addToast],
   );
 
   const undoCategorization = useCallback(
@@ -111,6 +118,18 @@ export function useTransactions() {
       await revert(txId);
     },
     [revert],
+  );
+
+  const createManual = useCallback(
+    async (payload: CreateManualPayload) => {
+      const tx = await transactionService.createManual(payload);
+      // Append to the store and refresh summary via a full reload
+      updateTransaction(tx);
+      addToast(`Transaction "${payload.merchant}" added`, 'success');
+      // Reload to get updated summary counts
+      void load();
+    },
+    [updateTransaction, addToast, load],
   );
 
   return {
@@ -126,6 +145,7 @@ export function useTransactions() {
     bulkCategorize,
     revert,
     undoCategorization,
+    createManual,
     setFilters: setTransactionFilters,
     addCustomCategory,
   };
