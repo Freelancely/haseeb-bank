@@ -108,7 +108,6 @@ export const NAV_ITEMS = [
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1',
   TIMEOUT: 10_000,
-  MOCK_DELAY: 400,
 } as const;
 
 // ─── Misc ─────────────────────────────────────────────────────────────────────
