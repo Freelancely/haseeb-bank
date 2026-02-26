@@ -229,7 +229,7 @@ export function AppLayout({ children }: Readonly<AppLayoutProps>) {
               letterSpacing: '0.05em',
             }}
           >
-            {import.meta.env.VITE_USE_MOCK === 'false' ? '🟢 LIVE' : '⬛ MOCK MODE'}
+            LIVE
           </div>
         </div>
       </aside>
